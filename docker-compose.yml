@@ -1,0 +1,77 @@
+name: knowledge-assistant
+
+x-app: &app
+  build: .
+  image: knowledge-assistant:local
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    KB_QDRANT_URL: http://qdrant:6333
+    # klucze z .env albo ze środowiska powłoki (wystarczy jeden)
+    ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  restart: unless-stopped
+
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.20.2
+    volumes:
+      - qdrant-data:/qdrant/storage
+    ports:
+      - "127.0.0.1:6333:6333" # panel: http://localhost:6333/dashboard
+    restart: unless-stopped
+
+  # Jedyny zapisujący do Qdranta: synchronizuje knowledge/ na żywo.
+  ingest:
+    <<: *app
+    command: ["python", "-m", "kb.ingest"]
+    volumes:
+      - ./knowledge:/app/knowledge:ro
+      - hf-cache:/models
+    depends_on:
+      qdrant:
+        condition: service_started # ingest sam czeka na Qdranta (obraz Qdranta nie ma curl)
+    healthcheck:
+      # zdrowy po pierwszej pełnej synchronizacji (pierwszy start pobiera model ~0,6 GB)
+      test: ["CMD", "test", "-f", "/tmp/kb-ingest-ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15m
+      start_interval: 2s
+
+  # Odpowiada na pytania i serwuje stronę; tylko czyta z Qdranta.
+  api:
+    <<: *app
+    command: ["uvicorn", "kb.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    volumes:
+      - hf-cache:/models
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      ingest:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5m
+      start_interval: 2s
+
+  # Testy jakości: docker compose --profile eval run --rm eval
+  eval:
+    <<: *app
+    profiles: ["eval"]
+    restart: "no"
+    command: ["python", "-m", "kb.evaluation", "--api", "http://api:8000"]
+    volumes:
+      - ./eval:/app/eval
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  qdrant-data:
+  hf-cache:

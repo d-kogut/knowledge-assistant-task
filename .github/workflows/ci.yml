@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: lint + typy + testy (jednostkowe i z prawdziwym Qdrantem)
+    runs-on: ubuntu-latest
+    env:
+      KB_INTEGRATION_REQUIRED: "1" # brak Dockera = błąd, nie pominięte testy
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.4.0 # projekt nie publikuje tagu v10
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy src
+      - run: uv run pytest -rs
+
+  e2e:
+    name: cały stack bez klucza API (obraz, ewaluacja wyszukiwania, aktualizacja na żywo)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.4.0 # projekt nie publikuje tagu v10
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: docker compose config --quiet
+      - name: Start (budowa obrazu, pobranie modelu, indeksowanie)
+        run: docker compose up -d --build --wait --wait-timeout 1500
+      - name: Ewaluacja wyszukiwania bez modelu językowego, z progami
+        run: >
+          uv run python -m kb.evaluation --api http://localhost:8000
+          --variants bm25,dense,hybrid --out "$RUNNER_TEMP/eval"
+          --min hybrid.top10=0.95 --min hybrid.coverage=0.95
+      - name: Stan indeksu i aktualizacja plików na żywo
+        run: uv run pytest -m e2e -rA
+        env:
+          KB_E2E_API_URL: http://localhost:8000
+      - name: Logi usług
+        if: failure()
+        run: docker compose logs --no-color
+      - if: always()
+        run: docker compose down -v

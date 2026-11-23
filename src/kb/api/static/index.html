@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SpaceHub — asystent wiedzy</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>SpaceHub — asystent wiedzy</h1>
+    <p class="subtitle">Odpowiedzi wyłącznie na podstawie dokumentacji firmy, z cytatami ze źródeł.</p>
+    <p id="status" class="status">Sprawdzam stan indeksu…</p>
+  </header>
+
+  <main>
+    <form id="ask-form" autocomplete="off">
+      <label for="question" class="visually-hidden">Pytanie</label>
+      <textarea id="question" rows="2" maxlength="1000" required
+                placeholder="Zadaj pytanie, np. Ile kosztuje Hot Desk Student i jakie ma ograniczenia?"></textarea>
+      <div class="controls">
+        <label class="toggle"><input type="checkbox" id="debug"> pokaż wyszukiwanie</label>
+        <label class="toggle">tryb
+          <select id="mode">
+            <option value="hybrid" selected>hybrydowy (domyślny)</option>
+            <option value="dense">tylko wektory</option>
+            <option value="bm25">tylko słowa (BM25)</option>
+          </select>
+        </label>
+        <label class="toggle">model
+          <select id="provider"><option value="">bez modelu językowego</option></select>
+        </label>
+        <button type="submit" id="submit">Zapytaj</button>
+      </div>
+    </form>
+
+    <section id="result" aria-live="polite" hidden></section>
+
+    <section id="examples">
+      <h2>Przykładowe pytania</h2>
+      <ul id="example-list"></ul>
+    </section>
+  </main>
+
+  <footer>
+    Wyszukiwanie: PolDense + BM25 (Qdrant) · odpowiedź: Claude albo OpenAI, z cytatami ·
+    <a href="/docs">API</a> · <a href="/status">stan indeksu (JSON)</a>
+  </footer>
+</body>
+</html>

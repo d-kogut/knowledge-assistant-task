@@ -1,0 +1,174 @@
+# Zestaw wzorcowy do testów jakości (make eval).
+#
+# sources: sekcje, w których jest odpowiedź — plik + nazwa sekcji (ostatni nagłówek, dokładnie).
+# facts:   fragmenty, które muszą paść w odpowiedzi. Bez znaczenia: wielkość liter, polskie
+#          znaki, separatory tysięcy ("2 240" = "2240"). "a|b" = wystarczy jedna wersja.
+# expect:  answered (domyślnie) albo not_found (odpowiedzi nie ma w dokumentacji).
+
+# --- 10 pytań z treści zadania -------------------------------------------------------------
+- id: r01
+  tags: [zadanie]
+  question: Ile kosztuje Hot Desk Student i jakie ma ograniczenia?
+  sources: [{file: 02-membership-plans.md, section: Hot Desk}]
+  facts: ["149", "legitymac", "Budget", "Standard", "100"]
+
+- id: r02
+  tags: [zadanie]
+  question: Jakie są etapy windykacji gdy członek nie płaci?
+  sources: [{file: 07-billing-and-finance.md, section: Windykacja}]
+  facts: ["Kruk", "21", "30", "60", "blokad"]
+
+- id: r03
+  tags: [zadanie, przeczące]
+  question: Czy mogę przyjść z psem do lokalizacji na Krowodrzy?
+  sources:
+    - {file: 12-policies-and-regulations.md, section: Lokalizacje dozwolone}
+    - {file: 10-member-support.md, section: Biuro i przestrzeń}
+  facts: ["Kazimierz", "Zabłoci", "niedozwolon|nie możesz|nie można|nie wolno|nie jest dozwolon|nie są dozwolon|tylko w|wyłącznie w"]
+
+- id: r04
+  tags: [zadanie, tabela]
+  question: Jakie sale konferencyjne mają wideokonferencję i ile kosztują?
+  sources: [{file: 05-conference-rooms.md, section: Inventory sal}]
+  facts: ["Wawel", "Błonia", "Fabryka", "Kampus", "Terminal"]
+
+- id: r05
+  tags: [zadanie, wiele źródeł]
+  question: Co się dzieje gdy zgubię kartę dostępu?
+  sources:
+    - {file: 04-access-and-security.md, section: Procedura zgubienia karty}
+    - {file: 10-member-support.md, section: Bezpieczeństwo}
+  facts: ["50", "PIN", "48", "dezaktyw|zablokow"]
+
+- id: r06
+  tags: [zadanie, tabela]
+  question: Jaka jest marża operacyjna SpaceHub i z czego się składają koszty?
+  sources: [{file: 07-billing-and-finance.md, section: Koszty operacyjne (miesięczne)}]
+  facts: ["9.7|9,7", "440000", "185000", "142000"]
+
+- id: r07
+  tags: [zadanie, wiele źródeł]
+  question: Jakie są plany ekspansji na 2026-2027?
+  sources:
+    - {file: 14-growth-and-expansion.md, section: "Q3 2026: Ekspansja — Wrocław"}
+    - {file: 14-growth-and-expansion.md, section: "2027: Skalowanie"}
+  facts: ["Wrocław", "Katowic", "Enterprise"]
+
+- id: r08
+  tags: [zadanie, wiele faktów]
+  question: Ile osób pracuje w dziale operacji i kto zarządza klastrem Zabłocie?
+  sources: [{file: 09-team-structure.md, section: Operacje (18 osób)}]
+  facts: ["18", "Ewa Kaczmarek"]
+
+- id: r09
+  tags: [zadanie, wiele źródeł]
+  question: Jak działa failover internetu i jaki jest SLA?
+  sources:
+    - {file: 06-maintenance-and-facilities.md, section: Internet}
+    - {file: 15-special-situations.md, section: Brak internetu}
+  facts: ["30 s|30s|30 sekund", "99.9|99,9", "automatycz"]
+
+- id: r10
+  tags: [zadanie, tabela]
+  question: Czym różni się plan Virtual Basic od Virtual Premium?
+  sources: [{file: 02-membership-plans.md, section: Wirtualne Biuro}]
+  facts: ["149", "399", "rejestrow", "4h|4 h|4 godz"]
+
+# --- parafrazy (inne słowa niż w dokumentach) ---------------------------------------------
+- id: p01
+  tags: [parafraza, przeczące]
+  question: Czy mogę wziąć ze sobą czworonoga do biura?
+  sources:
+    - {file: 12-policies-and-regulations.md, section: Lokalizacje dozwolone}
+    - {file: 12-policies-and-regulations.md, section: Zasady}
+    - {file: 10-member-support.md, section: Biuro i przestrzeń}
+  facts: ["Kazimierz", "Zabłoci"]
+
+- id: p02
+  tags: [parafraza]
+  question: Co mi grozi, jeśli zalegam z opłatami?
+  sources: [{file: 07-billing-and-finance.md, section: Windykacja}]
+  facts: ["blokad", "Kruk"]
+
+- id: p03
+  tags: [parafraza]
+  question: Gdzie zostawię auto przy biurze na Ruczaju i ile to kosztuje?
+  sources:
+    - {file: 11-parking-and-transport.md, section: Parkingi własne (naziemne)}
+    - {file: 11-parking-and-transport.md, section: Rezerwacja parkingu}
+  facts: ["250", "35"]
+
+- id: p04
+  tags: [parafraza]
+  question: Nie działa mi wifi, co mam zrobić?
+  sources: [{file: 10-member-support.md, section: IT i Internet}]
+  facts: ["SpaceHub-Main", "aplikac"]
+
+# --- odporność: bez polskich znaków, literówka -----------------------------------------------
+- id: t01
+  tags: [bez ogonków, przeczące]
+  question: czy moge przyjsc z psem na krowodrze
+  sources:
+    - {file: 12-policies-and-regulations.md, section: Lokalizacje dozwolone}
+    - {file: 10-member-support.md, section: Biuro i przestrzeń}
+  facts: ["Kazimierz", "Zabłoci"]
+
+- id: t02
+  tags: [literówka]
+  question: ile kosztuje hot desk studnet
+  sources: [{file: 02-membership-plans.md, section: Hot Desk}]
+  facts: ["149"]
+
+# --- przeczące w dokumentacji ---------------------------------------------------------------
+- id: n01
+  tags: [przeczące]
+  question: Czy mogę przychodzić do biura z kotem?
+  sources:
+    - {file: 12-policies-and-regulations.md, section: Zasady}
+    - {file: 10-member-support.md, section: Biuro i przestrzeń}
+  facts: ["niedozwolon|nie możesz|nie można|nie wolno|nie jest dozwolon|nie są dozwolon"]
+
+# --- spoza dokumentacji: oczekiwana odmowa ---------------------------------------------------
+- id: o01
+  tags: [spoza dokumentacji]
+  question: Jaka jest stolica Francji?
+  expect: not_found
+
+- id: o02
+  tags: [spoza dokumentacji]
+  question: Czy w SpaceHub jest basen?
+  expect: not_found
+
+- id: o03
+  tags: [spoza dokumentacji]
+  question: Jaki jest numer NIP firmy SpaceHub?
+  expect: not_found
+
+# --- sprzeczności w danych i obliczenia ------------------------------------------------------
+- id: c01
+  tags: [sprzeczność]
+  question: Ilu Community Managerów pracuje w SpaceHub?
+  sources:
+    - {file: 09-team-structure.md, section: Operacje (18 osób)}
+    - {file: 08-community-and-events.md, section: Community Manager}
+  facts: ["6"]
+
+- id: c02
+  tags: [sprzeczność]
+  question: W jakich godzinach mam dostęp z planem Hot Desk Flex w lokalizacji Standard?
+  sources:
+    - {file: 04-access-and-security.md, section: Godziny dostępu}
+    - {file: 02-membership-plans.md, section: Hot Desk}
+  facts: ["6:00|6.00", "23:00|23.00"]
+
+- id: x01
+  tags: [obliczenie]
+  question: Ile kosztuje 4-osobowe biuro dedykowane w lokalizacji Budget?
+  sources: [{file: 02-membership-plans.md, section: Biuro Dedykowane}]
+  facts: ["2240"]
+
+- id: x02
+  tags: [kontakt]
+  question: Kto jest inspektorem ochrony danych i jak się z nim skontaktować?
+  sources: [{file: 12-policies-and-regulations.md, section: Inspektor Ochrony Danych}]
+  facts: ["Lewandowska", "iod@spacehub.pl"]
